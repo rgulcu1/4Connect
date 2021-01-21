@@ -11,7 +11,14 @@ public final class Constant {
         }
     }
 
-    public static final String[][] BOARD = {{" "," "," "," "," "," "," "},
+    public enum Heuristic{
+        HEURISTIC1,
+        HEURISTIC2,
+        HEURISTIC3;
+    }
+
+
+    public static String[][] BOARD = {{" "," "," "," "," "," "," "},
                                             {" "," "," "," "," "," "," "},
                                             {" "," "," "," "," "," "," "},
                                             {" "," "," "," "," "," "," "},

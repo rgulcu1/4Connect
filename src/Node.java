@@ -35,4 +35,22 @@ public class Node {
         return depth;
     }
 
+    @Override
+    public String toString() {
+        return "Node{" +
+                "weight=" + weight +
+                ", state=" + twoDtoString() +
+                ", depth=" + depth +
+                '}';
+    }
+
+    public String twoDtoString(){
+        String text = "[";
+        for(String[] row : state){
+            text += Arrays.toString(row);
+        }
+        text+="]";
+
+        return text;
+    }
 }

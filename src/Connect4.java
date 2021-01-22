@@ -9,7 +9,11 @@ public class Connect4 {
 
     private Constant.Heuristic heuristicFunction;
 
-    public void playHumanvsHuman(){
+    private Integer ROW_SIZE = 6;
+
+    private Integer COL_SIZE = 7;
+
+    public void playHumanvsHuman(Constant.Heuristic heuristicFunction , Integer depthLevel){
 
 
 
@@ -18,6 +22,9 @@ public class Connect4 {
             Utils.printBoard();
             playerMove(Constant.Player.Player1);
             Utils.printBoard();
+            Integer aiPrefer = negamax(Constant.BOARD,0,0,depthLevel,Integer.MIN_VALUE,Integer.MAX_VALUE,Constant.Player.Player2);
+            System.out.println(aiPrefer);
+            //System.out.println(aiPrefer[1]);
             playerMove(Constant.Player.Player2);
         }
 
@@ -25,15 +32,17 @@ public class Connect4 {
 
     public void playHumanvsAi(Constant.Heuristic heuristicFunction , Integer depthLevel){
 
-        this.depthLevel= depthLevel;
         this.heuristicFunction = heuristicFunction;
 
         while(true){
             Utils.printBoard();
             playerMove(Constant.Player.Player1);
             Utils.printBoard();
-            String[][] aiPrefer = alfaBetaSearch(Constant.Player.Player2);
-            Utils.deepCopyDobuleArray(Constant.BOARD , aiPrefer);
+            Integer aiPrefer = negamax(Constant.BOARD,0,0,depthLevel,Integer.MIN_VALUE,Integer.MAX_VALUE,Constant.Player.Player2);
+            //Utils.deepCopyDobuleArray(Constant.BOARD , aiPrefer);
+
+
+
         }
     }
 
@@ -64,6 +73,8 @@ public class Connect4 {
         for (int i = 0; i <7 ; i++) {
             Node currentNode = new Node(tempNode,Integer.MAX_VALUE , node.getDepth()+1);
             Integer rowIndex = move(currentNode.getState(),i,player);
+
+
             if( rowIndex == -1){
                 continue;
             }
@@ -72,6 +83,8 @@ public class Connect4 {
             if( minValue.getWeight() > node.getWeight()){
                 node.setWeight(minValue.getWeight());
                 node.setState(minValue.getState());
+
+                System.out.println(node+" "+i +"max-MinValue");
             }
             if(node.getWeight() >= beta) return node;
 
@@ -106,6 +119,7 @@ public class Connect4 {
             Node maxValue = maxValue(currentNode,rowIndex,i,alfa,beta,Utils.reversePlayer(player));
             if( maxValue.getWeight() < node.getWeight()){
                 node.setWeight(maxValue.getWeight());
+                System.out.println(node+" "+i +"mix-MaxValue");
             }
             if(node.getWeight() <= alfa) return node;
 
@@ -113,6 +127,68 @@ public class Connect4 {
         }
         return node;
     }
+
+    private Integer negamax(String[][] state, Integer lastRow, Integer lastCol ,  Integer depth , Integer alfa , Integer beta , Constant.Player player){
+
+        if(checkGameOver(state,lastRow,lastCol ,Constant.Player.Player1)) {
+            //Integer[] aiMove = {lastCol, -100000};
+            //return aiMove[1];
+
+            return utility(state, Constant.Player.Player1);
+        }
+
+        if(checkGameOver(state,lastRow,lastCol ,Constant.Player.Player2)) {
+            //Integer[] aiMove = {lastCol, 100000};
+            //return aiMove[1];
+
+            return utility(state, Constant.Player.Player2);
+
+        }
+
+
+
+        if(depth == 0){
+           // Integer weight = heuristicFunction1(state,player);
+            //Integer[] aiMove = {null,weight};
+            //return aiMove[1];
+
+            return utility(state, player);
+        }
+
+
+        //Integer[] v = {null , Integer.MIN_VALUE};
+
+        Integer v = Integer.MIN_VALUE;
+
+        for (int i = 0; i <7 ; i++) {
+
+            String[][] childNode = new String[state.length][];
+            Utils.deepCopyDobuleArray(childNode,state);
+            Integer rowIndex = move(childNode,i,player);
+            if( rowIndex == -1){
+                continue;
+            }
+
+
+            //Integer[] negamaxValue = negamax(childNode,rowIndex,i,depth-1,-beta,-alfa,Utils.reversePlayer(player));
+            v = Math.max(v,-negamax(childNode,rowIndex,i,depth-1,-beta,-alfa,Utils.reversePlayer(player)));
+            //negamaxValue[1] = -negamaxValue[1];
+
+            //if(negamaxValue[1] > v[1]){
+              //  v[0] = i;
+               // v[1] = negamaxValue[1];
+           // }
+
+           // alfa = Math.max(alfa,v[1]);
+            //if(alfa >= beta) break;
+        }
+
+        return v;
+
+    }
+
+
+
 
     private boolean checkGameOver(String[][] state , Integer lastRow, Integer lastCol , Constant.Player player){
 
@@ -130,12 +206,13 @@ public class Connect4 {
 
             if (!checkRow[i].equals(player.label)) continue;
 
-            if(checkRow[i].equals(checkRow[i+1])) winCounter++;
+            if(checkRow[i].equals(checkRow[i+1])) {
+                winCounter++;
+                if(winCounter >= 4) return true;
+            }
             else winCounter = 1;
         }
-
-        if(winCounter >= 4) return true;
-        else return false;
+         return false;
     }
 
     private boolean checkVertical(String[][] state,Integer lastCol, Constant.Player player){
@@ -146,12 +223,14 @@ public class Connect4 {
 
             if(!state[i][lastCol].equals(player.label)) continue;
 
-            if(state[i][lastCol].equals(state[i+1][lastCol])) winCounter++;
+            if(state[i][lastCol].equals(state[i+1][lastCol])){
+                winCounter++;
+                if(winCounter >= 4) return true;
+            }
             else winCounter = 1;
         }
 
-        if(winCounter >= 4) return true;
-        else return false;
+        return false;
     }
 
     private boolean checkDiagonal(String[][] state,Integer lastRow, Integer lastCol , Constant.Player player){
@@ -291,5 +370,62 @@ public class Connect4 {
 
 
         return counter;
+    }
+
+    private int utility(String[][] gameBoard , Constant.Player player) {
+        int score = 0;
+
+
+        //check for win horizontally
+        for (int row=0; row<ROW_SIZE; row++) {
+            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
+                if (gameBoard[row][col].equals(gameBoard[row][col+1]) &&
+                        gameBoard[row][col].equals(gameBoard[row][col+2]) &&
+                        gameBoard[row][col] == gameBoard[row][col+3] &&
+                        gameBoard[row][col] != " ") {
+                    if (gameBoard[row][col] == player.label) score = score + 100;
+                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
+                }
+            }
+        }
+        //check for win vertically
+        for (int row=0; row<ROW_SIZE-3; row++) { //0 to 2
+            for (int col=0; col<COL_SIZE; col++) {
+                if (gameBoard[row][col] == gameBoard[row+1][col] &&
+                        gameBoard[row][col] == gameBoard[row+2][col] &&
+                        gameBoard[row][col] == gameBoard[row+3][col] &&
+                        gameBoard[row][col] != " ") {
+                    if (gameBoard[row][col] ==  player.label) score = score + 100;
+                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
+                }
+            }
+        }
+        //check for win diagonally (upper left to lower right)
+        for (int row=0; row<ROW_SIZE-3; row++) { //0 to 2
+            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
+                if (gameBoard[row][col] == gameBoard[row+1][col+1] &&
+                        gameBoard[row][col] == gameBoard[row+2][col+2] &&
+                        gameBoard[row][col] == gameBoard[row+3][col+3] &&
+                        gameBoard[row][col] != " ") {
+                    if (gameBoard[row][col] ==  player.label) score = score + 100;
+                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
+                }
+            }
+        }
+        //check for win diagonally (lower left to upper right)
+        for (int row=3; row<ROW_SIZE; row++) { //3 to 5
+            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
+                if (gameBoard[row][col] == gameBoard[row-1][col+1] &&
+                        gameBoard[row][col] == gameBoard[row-2][col+2] &&
+                        gameBoard[row][col] == gameBoard[row-3][col+3] &&
+                        gameBoard[row][col] != " ") {
+                    if (gameBoard[row][col] ==  player.label) score = score + 100;
+                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
+                }
+            }
+        }
+
+
+        return score;
     }
 }

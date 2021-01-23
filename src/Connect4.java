@@ -1,4 +1,5 @@
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Connect4 {
@@ -51,17 +52,13 @@ public class Connect4 {
 
    private void generateAiDecision(Player player){
        Integer[] aiMove = maxPlay(boardNode , player.depth,Integer.MIN_VALUE , Integer.MAX_VALUE , player);
+       System.out.println(Arrays.toString(aiMove));
        move(boardNode.getState(),aiMove[0],player);
 
-       if(boardNode.getScore(player) == Constant.WIN_SCORE){
-
-           Utils.printBoard(boardNode.getState());
-           System.out.println(player.name + " winss!!");
-           System.exit(1);
-       }
+       checkGameOver(player);
    }
 
-   private Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
+   public  Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
 
        Integer score = node.getScore(player);
 
@@ -171,48 +168,5 @@ public class Connect4 {
         return i;
     }
 
-    private Integer heuristicFunction1(String[][] state , Player player){
 
-        Integer heuristicCounter = 0;
-        for (int i = 0; i <6 ; i++) {
-            Integer startIndex=-1;
-            Integer endIndex=-1;
-
-            for (int j = 0; j <7 ; j++) {
-                if(player.label.equals(state[i][j]) && startIndex== -1) startIndex = j;
-
-                if(!player.label.equals(state[i][j]) && startIndex != -1){
-                    endIndex = j-1;
-                    heuristicCounter += calculateNeighborValues(state , player , i , startIndex , endIndex);
-                    startIndex= -1;
-                    endIndex= -1;
-                }
-            }
-            if(startIndex != -1){
-                endIndex = 6;
-                heuristicCounter += calculateNeighborValues(state , player , i , startIndex , endIndex);
-            }
-        }
-        return  heuristicCounter;
-    }
-
-    private Integer calculateNeighborValues(String[][] state , Player player, Integer i , Integer startIndex , Integer endIndex){
-        Integer counter = 0;
-
-        if(startIndex - 1 >= 0 && state[i][startIndex -1].equals(" ")) counter++;
-        if(endIndex + 1 <=6  && state[i][endIndex + 1].equals(" ")) counter++;
-
-        if((endIndex - startIndex) > 0) counter += (endIndex - startIndex) * 2;
-
-        if(i <=0) return counter;
-
-        for (int j = 0; j < endIndex - startIndex + 1 ; j++) {
-
-            if(state[i-1][j+startIndex].equals(" ")) counter++;
-            if(state[i-1][j+startIndex].equals(player.label)) counter+=2;
-        }
-
-
-        return counter;
-    }
 }

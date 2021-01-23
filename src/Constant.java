@@ -20,7 +20,7 @@ public final class Constant {
 
     public static final Integer COL_SIZE = 7;
 
-    public static final Integer WIN_SCORE =  100000;
+    public static final Integer WIN_SCORE =  10000000;
 
     public static final Player player1 = new Player("B" , "Player 1");
 

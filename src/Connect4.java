@@ -1,318 +1,162 @@
-import jdk.jshell.execution.Util;
 
-import java.util.Objects;
 import java.util.Scanner;
 
 public class Connect4 {
 
-    private Integer depthLevel;
 
-    private Constant.Heuristic heuristicFunction;
-
-    private Integer ROW_SIZE = 6;
-
-    private Integer COL_SIZE = 7;
-
-    public void playHumanvsHuman(Constant.Heuristic heuristicFunction , Integer depthLevel){
+    Node boardNode = new Node(Constant.INITIAL_BOARD);
 
 
+    public void playHumanvsHuman(){
 
         while (true) {
 
-            Utils.printBoard();
-            playerMove(Constant.Player.Player1);
-            Utils.printBoard();
-            Integer aiPrefer = negamax(Constant.BOARD,0,0,depthLevel,Integer.MIN_VALUE,Integer.MAX_VALUE,Constant.Player.Player2);
-            System.out.println(aiPrefer);
-            //System.out.println(aiPrefer[1]);
-            playerMove(Constant.Player.Player2);
+            Utils.printBoard(boardNode.getState());
+            playerMove(Constant.player1);
+            Utils.printBoard(boardNode.getState());
+            playerMove(Constant.player2);
         }
 
     }
 
     public void playHumanvsAi(Constant.Heuristic heuristicFunction , Integer depthLevel){
 
-        this.heuristicFunction = heuristicFunction;
+        Constant.player2.depth = depthLevel;
+        Constant.player2.heuristic =heuristicFunction;
+
 
         while(true){
-            Utils.printBoard();
-            playerMove(Constant.Player.Player1);
-            Utils.printBoard();
-            Integer aiPrefer = negamax(Constant.BOARD,0,0,depthLevel,Integer.MIN_VALUE,Integer.MAX_VALUE,Constant.Player.Player2);
-            //Utils.deepCopyDobuleArray(Constant.BOARD , aiPrefer);
-
-
-
+            Utils.printBoard(boardNode.getState());
+            playerMove(Constant.player1);
+            Utils.printBoard(boardNode.getState());
+            generateAiDecision(Constant.player2);
         }
     }
 
-    private String[][] alfaBetaSearch(Constant.Player player){
+    public void playAivsAi(Constant.Heuristic heuristicFunction1 , Constant.Heuristic heuristicFunction2 , Integer depthLevel1 , Integer depthLevel2){
 
-        final Node node = new Node(Constant.BOARD,Integer.MIN_VALUE,0);
-        Node v = maxValue(node , 0,0,Integer.MIN_VALUE , Integer.MAX_VALUE,player);
-        return  v.getState() ;
-    }
+        Constant.player1.depth = depthLevel1;
+        Constant.player1.heuristic =heuristicFunction1;
 
-    private Node maxValue(Node node, Integer lastRow, Integer lastCol, Integer alfa , Integer beta, Constant.Player player){
-
-        if(checkGameOver(node.getState(),lastRow,lastCol, player)){
-
-            node.setWeight(Integer.MAX_VALUE);
-            return node;
-
-        }
-
-        if(node.getDepth() == depthLevel){
-            node.setWeight(heuristicFunction1(node.getState(),player));
-            return node;
-        }
-
-        String[][] tempNode = new String[node.getState().length][];
-        Utils.deepCopyDobuleArray(tempNode , node.getState());
-
-        for (int i = 0; i <7 ; i++) {
-            Node currentNode = new Node(tempNode,Integer.MAX_VALUE , node.getDepth()+1);
-            Integer rowIndex = move(currentNode.getState(),i,player);
-
-
-            if( rowIndex == -1){
-                continue;
-            }
-
-            Node minValue = minValue(currentNode,rowIndex,i,alfa,beta,Utils.reversePlayer(player));
-            if( minValue.getWeight() > node.getWeight()){
-                node.setWeight(minValue.getWeight());
-                node.setState(minValue.getState());
-
-                System.out.println(node+" "+i +"max-MinValue");
-            }
-            if(node.getWeight() >= beta) return node;
-
-            alfa = Math.max(alfa , node.getWeight());
-        }
-
-        return node;
-    }
-
-    private Node minValue(Node node, Integer lastRow, Integer lastCol, Integer alfa , Integer beta, Constant.Player player){
-
-        if(checkGameOver(node.getState(),lastRow,lastCol, player)){
-
-            node.setWeight(Integer.MIN_VALUE);
-            return node;
-
-        }
-
-
-        if(node.getDepth() == depthLevel){
-            node.setWeight(heuristicFunction1(node.getState(),player));
-            return node;
-        }
-
-        for (int i = 0; i <7 ; i++) {
-            Node currentNode = new Node(node.getState(),Integer.MIN_VALUE,node.getDepth()+1);
-            Integer rowIndex = move(currentNode.getState(),i,player);
-            if( rowIndex == -1){
-                continue;
-            }
-
-            Node maxValue = maxValue(currentNode,rowIndex,i,alfa,beta,Utils.reversePlayer(player));
-            if( maxValue.getWeight() < node.getWeight()){
-                node.setWeight(maxValue.getWeight());
-                System.out.println(node+" "+i +"mix-MaxValue");
-            }
-            if(node.getWeight() <= alfa) return node;
-
-            beta = Math.min(beta , node.getWeight());
-        }
-        return node;
-    }
-
-    private Integer negamax(String[][] state, Integer lastRow, Integer lastCol ,  Integer depth , Integer alfa , Integer beta , Constant.Player player){
-
-        if(checkGameOver(state,lastRow,lastCol ,Constant.Player.Player1)) {
-            //Integer[] aiMove = {lastCol, -100000};
-            //return aiMove[1];
-
-            return utility(state, Constant.Player.Player1);
-        }
-
-        if(checkGameOver(state,lastRow,lastCol ,Constant.Player.Player2)) {
-            //Integer[] aiMove = {lastCol, 100000};
-            //return aiMove[1];
-
-            return utility(state, Constant.Player.Player2);
-
-        }
-
-
-
-        if(depth == 0){
-           // Integer weight = heuristicFunction1(state,player);
-            //Integer[] aiMove = {null,weight};
-            //return aiMove[1];
-
-            return utility(state, player);
-        }
-
-
-        //Integer[] v = {null , Integer.MIN_VALUE};
-
-        Integer v = Integer.MIN_VALUE;
-
-        for (int i = 0; i <7 ; i++) {
-
-            String[][] childNode = new String[state.length][];
-            Utils.deepCopyDobuleArray(childNode,state);
-            Integer rowIndex = move(childNode,i,player);
-            if( rowIndex == -1){
-                continue;
-            }
-
-
-            //Integer[] negamaxValue = negamax(childNode,rowIndex,i,depth-1,-beta,-alfa,Utils.reversePlayer(player));
-            v = Math.max(v,-negamax(childNode,rowIndex,i,depth-1,-beta,-alfa,Utils.reversePlayer(player)));
-            //negamaxValue[1] = -negamaxValue[1];
-
-            //if(negamaxValue[1] > v[1]){
-              //  v[0] = i;
-               // v[1] = negamaxValue[1];
-           // }
-
-           // alfa = Math.max(alfa,v[1]);
-            //if(alfa >= beta) break;
-        }
-
-        return v;
-
-    }
-
-
-
-
-    private boolean checkGameOver(String[][] state , Integer lastRow, Integer lastCol , Constant.Player player){
-
-        if(checkHorizontal(state,lastRow,player) || checkVertical(state,lastCol,player) || checkDiagonal(state,lastRow,lastCol,player)) return true;
-        else return false;
-    }
-
-    private boolean checkHorizontal(String[][] state,Integer lastRow, Constant.Player player){
-
-        Integer winCounter = 1;
-
-        final String[] checkRow = state[lastRow];
-
-        for (int i = 0; i <6 ; i++) {
-
-            if (!checkRow[i].equals(player.label)) continue;
-
-            if(checkRow[i].equals(checkRow[i+1])) {
-                winCounter++;
-                if(winCounter >= 4) return true;
-            }
-            else winCounter = 1;
-        }
-         return false;
-    }
-
-    private boolean checkVertical(String[][] state,Integer lastCol, Constant.Player player){
-
-        Integer winCounter = 1;
-
-        for (int i = 0; i <5 ; i++) {
-
-            if(!state[i][lastCol].equals(player.label)) continue;
-
-            if(state[i][lastCol].equals(state[i+1][lastCol])){
-                winCounter++;
-                if(winCounter >= 4) return true;
-            }
-            else winCounter = 1;
-        }
-
-        return false;
-    }
-
-    private boolean checkDiagonal(String[][] state,Integer lastRow, Integer lastCol , Constant.Player player){
-
-        Integer winCounter = 1;
-        Integer row = lastRow;
-        Integer col = lastCol;
+        Constant.player2.depth = depthLevel2;
+        Constant.player2.heuristic =heuristicFunction2;
 
         while(true){
-
-            if (row - 1 < 0 || col -1 <0 ) break;
-
-            if(state[--row][--col].equals(player.label)) winCounter++;
-            else break;
+            Utils.printBoard(boardNode.getState());
+            generateAiDecision(Constant.player1);
+            Utils.printBoard(boardNode.getState());
+            generateAiDecision(Constant.player2);
         }
-
-        row = lastRow;
-        col = lastCol;
-        while(true){
-
-            if (row + 1 > 5 || col + 1 > 6 ) break;
-
-            if(state[++row][++col].equals(player.label)) winCounter++;
-            else break;
-        }
-
-        if(winCounter >= 4) return true;
-        else winCounter=1;
-
-        row = lastRow;
-        col = lastCol;
-        while(true){
-
-            if (row - 1 < 0 || col + 1 >6 ) break;
-
-            if(state[--row][++col].equals(player.label)) winCounter++;
-            else break;
-        }
-
-        row = lastRow;
-        col = lastCol;
-        while(true){
-
-            if (row + 1 > 5 || col - 1 < 0 ) break;
-
-            if(state[++row][--col].equals(player.label)) winCounter++;
-            else break;
-        }
-
-        if(winCounter >= 4) return true;
-        else return false;
     }
 
-    private void playerMove(Constant.Player player){
+   private void generateAiDecision(Player player){
+       Integer[] aiMove = maxPlay(boardNode , player.depth,Integer.MIN_VALUE , Integer.MAX_VALUE , player);
+       move(boardNode.getState(),aiMove[0],player);
+
+       if(boardNode.getScore(player) == Constant.WIN_SCORE){
+
+           Utils.printBoard(boardNode.getState());
+           System.out.println(player.name + " winss!!");
+           System.exit(1);
+       }
+   }
+
+   private Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
+
+       Integer score = node.getScore(player);
+
+       if( node.isGameOver(depth , score)) return new Integer[] {null ,score };
+
+       Integer[] max = {null ,Integer.MIN_VALUE};
+
+       for (int i = 0; i <Constant.COL_SIZE ; i++) {
+
+           Node childNode = new Node(node.getState());
+
+           if(move(childNode.getState(),i,player) == -1) continue;
+
+           Integer[] minPlay =  minPlay(childNode,depth-1, alfa , beta , Utils.reversePlayer(player));
+
+           if (max[0] == null || minPlay[1] > max[1]) {
+               max[0] = i;
+               max[1] = minPlay[1];
+               alfa = minPlay[1];
+           }
+
+           if (alfa >= beta) return max;
+       }
+       return max;
+   }
+
+   private Integer[] minPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
+
+       Integer score = node.getScore(Utils.reversePlayer(player));
+
+       if( node.isGameOver(depth , score)) return new Integer[] {null ,score };
+
+       Integer[] min = {null ,Integer.MAX_VALUE};
+
+       for (int i = 0; i <Constant.COL_SIZE ; i++) {
+
+           Node childNode = new Node(node.getState());
+
+           if(move(childNode.getState(),i,player) == -1) continue;
+
+           Integer[] maxPlay =  maxPlay(childNode,depth-1, alfa , beta , Utils.reversePlayer(player));
+
+           if (min[0] == null || maxPlay[1] < min[1]) {
+               min[0] = i;
+               min[1] = maxPlay[1];
+               beta = maxPlay[1];
+           }
+
+           if (alfa >= beta) return min;
+       }
+       return min;
+
+   }
+
+
+    private void checkGameOver(Player player){
+
+       if(boardNode.getScore(player) == Constant.WIN_SCORE){
+            Utils.printBoard(boardNode.getState());
+            System.out.println(player.name + " winss!");
+            System.exit(1);
+        }
+
+        if(boardNode.isBoardFull()){
+            Utils.printBoard(boardNode.getState());
+            System.out.println("Tie!!");
+            System.exit(1);
+        }
+    }
+
+    private void playerMove(Player player) {
 
         final Scanner scan = new Scanner(System.in);
         Integer colChoice;
         Integer row;
 
-        System.out.print("\n" + player.name() + " please enter a column:");
-        while (true){
+        System.out.print("\n" + player.name + " please enter a column:");
+        while (true) {
 
             colChoice = scan.nextInt();
-            if(colChoice > 7  || colChoice < 1) {
+            if (colChoice > 7 || colChoice < 1) {
                 System.err.println("Please Enter a valid column number!!!");
                 continue;
             }
-            row = move(Constant.BOARD,colChoice-1 , player);
-            if( row != -1){
+            row = move(boardNode.getState(), colChoice - 1, player);
+            if (row != -1) {
                 break;
             }
             System.err.println("Selected column is full!!!");
         }
 
-        if(checkGameOver(Constant.BOARD,row,colChoice-1,player)){
-            Utils.printBoard();
-            System.out.println(player.name() + " winss!!");
-            System.exit(1);
-        }
+        checkGameOver(player);
     }
 
-    private Integer move(String[][] state , Integer colChoice , Constant.Player player){
+    private Integer move(String[][] state , Integer colChoice , Player player){
 
         if(!state[0][colChoice].equals(" ")){
             return -1;
@@ -327,7 +171,7 @@ public class Connect4 {
         return i;
     }
 
-    private Integer heuristicFunction1(String[][] state , Constant.Player player){
+    private Integer heuristicFunction1(String[][] state , Player player){
 
         Integer heuristicCounter = 0;
         for (int i = 0; i <6 ; i++) {
@@ -352,7 +196,7 @@ public class Connect4 {
         return  heuristicCounter;
     }
 
-    private Integer calculateNeighborValues(String[][] state , Constant.Player player, Integer i , Integer startIndex , Integer endIndex){
+    private Integer calculateNeighborValues(String[][] state , Player player, Integer i , Integer startIndex , Integer endIndex){
         Integer counter = 0;
 
         if(startIndex - 1 >= 0 && state[i][startIndex -1].equals(" ")) counter++;
@@ -370,62 +214,5 @@ public class Connect4 {
 
 
         return counter;
-    }
-
-    private int utility(String[][] gameBoard , Constant.Player player) {
-        int score = 0;
-
-
-        //check for win horizontally
-        for (int row=0; row<ROW_SIZE; row++) {
-            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
-                if (gameBoard[row][col].equals(gameBoard[row][col+1]) &&
-                        gameBoard[row][col].equals(gameBoard[row][col+2]) &&
-                        gameBoard[row][col] == gameBoard[row][col+3] &&
-                        gameBoard[row][col] != " ") {
-                    if (gameBoard[row][col] == player.label) score = score + 100;
-                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
-                }
-            }
-        }
-        //check for win vertically
-        for (int row=0; row<ROW_SIZE-3; row++) { //0 to 2
-            for (int col=0; col<COL_SIZE; col++) {
-                if (gameBoard[row][col] == gameBoard[row+1][col] &&
-                        gameBoard[row][col] == gameBoard[row+2][col] &&
-                        gameBoard[row][col] == gameBoard[row+3][col] &&
-                        gameBoard[row][col] != " ") {
-                    if (gameBoard[row][col] ==  player.label) score = score + 100;
-                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
-                }
-            }
-        }
-        //check for win diagonally (upper left to lower right)
-        for (int row=0; row<ROW_SIZE-3; row++) { //0 to 2
-            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
-                if (gameBoard[row][col] == gameBoard[row+1][col+1] &&
-                        gameBoard[row][col] == gameBoard[row+2][col+2] &&
-                        gameBoard[row][col] == gameBoard[row+3][col+3] &&
-                        gameBoard[row][col] != " ") {
-                    if (gameBoard[row][col] ==  player.label) score = score + 100;
-                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
-                }
-            }
-        }
-        //check for win diagonally (lower left to upper right)
-        for (int row=3; row<ROW_SIZE; row++) { //3 to 5
-            for (int col=0; col<COL_SIZE-3; col++) { //0 to 3
-                if (gameBoard[row][col] == gameBoard[row-1][col+1] &&
-                        gameBoard[row][col] == gameBoard[row-2][col+2] &&
-                        gameBoard[row][col] == gameBoard[row-3][col+3] &&
-                        gameBoard[row][col] != " ") {
-                    if (gameBoard[row][col] ==  player.label) score = score + 100;
-                    //if (gameBoard[row][col] == PLAYER2_MOVE) score = score - 100;
-                }
-            }
-        }
-
-
-        return score;
     }
 }

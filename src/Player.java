@@ -1,3 +1,5 @@
+import java.awt.*;
+
 public class Player {
 
     public final String label;
@@ -8,9 +10,15 @@ public class Player {
 
     public String name;
 
-    Player(String label , String name) {
+    public Color playerColor;
+
+    public String colorName;
+
+    Player(String label , String name , Color color , String colorName) {
         this.label = label;
         this.name = name;
+        this.playerColor =color;
+        this.colorName = colorName;
     }
 
     Player(String label, Constant.Heuristic heuristic, Integer depth) {

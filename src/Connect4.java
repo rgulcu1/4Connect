@@ -31,6 +31,7 @@ public class Connect4 {
             playerMove(Constant.player1);
             Utils.printBoard(boardNode.getState());
             generateAiDecision(Constant.player2);
+            checkGameOver(Constant.player2);
         }
     }
 
@@ -44,18 +45,17 @@ public class Connect4 {
 
         while(true){
             Utils.printBoard(boardNode.getState());
+            checkGameOver(Constant.player2);
             generateAiDecision(Constant.player1);
             Utils.printBoard(boardNode.getState());
+            checkGameOver(Constant.player2);
             generateAiDecision(Constant.player2);
         }
     }
 
-   private void generateAiDecision(Player player){
+   public void generateAiDecision(Player player){
        Integer[] aiMove = maxPlay(boardNode , player.depth,Integer.MIN_VALUE , Integer.MAX_VALUE , player);
-       System.out.println(Arrays.toString(aiMove));
        move(boardNode.getState(),aiMove[0],player);
-
-       checkGameOver(player);
    }
 
    public  Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
@@ -113,7 +113,6 @@ public class Connect4 {
 
    }
 
-
     private void checkGameOver(Player player){
 
        if(boardNode.getScore(player) == Constant.WIN_SCORE){
@@ -153,7 +152,7 @@ public class Connect4 {
         checkGameOver(player);
     }
 
-    private Integer move(String[][] state , Integer colChoice , Player player){
+    public Integer move(String[][] state , Integer colChoice , Player player){
 
         if(!state[0][colChoice].equals(" ")){
             return -1;

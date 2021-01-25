@@ -1,5 +1,4 @@
 
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class Connect4 {
@@ -8,57 +7,12 @@ public class Connect4 {
     Node boardNode = new Node(Constant.INITIAL_BOARD);
 
 
-    public void playHumanvsHuman(){
-
-        while (true) {
-
-            Utils.printBoard(boardNode.getState());
-            playerMove(Constant.player1);
-            Utils.printBoard(boardNode.getState());
-            playerMove(Constant.player2);
-        }
-
-    }
-
-    public void playHumanvsAi(Constant.Heuristic heuristicFunction , Integer depthLevel){
-
-        Constant.player2.depth = depthLevel;
-        Constant.player2.heuristic =heuristicFunction;
-
-
-        while(true){
-            Utils.printBoard(boardNode.getState());
-            playerMove(Constant.player1);
-            Utils.printBoard(boardNode.getState());
-            generateAiDecision(Constant.player2);
-            checkGameOver(Constant.player2);
-        }
-    }
-
-    public void playAivsAi(Constant.Heuristic heuristicFunction1 , Constant.Heuristic heuristicFunction2 , Integer depthLevel1 , Integer depthLevel2){
-
-        Constant.player1.depth = depthLevel1;
-        Constant.player1.heuristic =heuristicFunction1;
-
-        Constant.player2.depth = depthLevel2;
-        Constant.player2.heuristic =heuristicFunction2;
-
-        while(true){
-            Utils.printBoard(boardNode.getState());
-            checkGameOver(Constant.player2);
-            generateAiDecision(Constant.player1);
-            Utils.printBoard(boardNode.getState());
-            checkGameOver(Constant.player2);
-            generateAiDecision(Constant.player2);
-        }
-    }
-
    public void generateAiDecision(Player player){
        Integer[] aiMove = maxPlay(boardNode , player.depth,Integer.MIN_VALUE , Integer.MAX_VALUE , player);
        move(boardNode.getState(),aiMove[0],player);
    }
 
-   public  Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
+   private   Integer[] maxPlay(Node node , Integer depth, Integer alfa , Integer beta , Player player){
 
        Integer score = node.getScore(player);
 
@@ -113,46 +67,7 @@ public class Connect4 {
 
    }
 
-    private void checkGameOver(Player player){
-
-       if(boardNode.getScore(player) == Constant.WIN_SCORE){
-            Utils.printBoard(boardNode.getState());
-            System.out.println(player.name + " winss!");
-            System.exit(1);
-        }
-
-        if(boardNode.isBoardFull()){
-            Utils.printBoard(boardNode.getState());
-            System.out.println("Tie!!");
-            System.exit(1);
-        }
-    }
-
-    private void playerMove(Player player) {
-
-        final Scanner scan = new Scanner(System.in);
-        Integer colChoice;
-        Integer row;
-
-        System.out.print("\n" + player.name + " please enter a column:");
-        while (true) {
-
-            colChoice = scan.nextInt();
-            if (colChoice > 7 || colChoice < 1) {
-                System.err.println("Please Enter a valid column number!!!");
-                continue;
-            }
-            row = move(boardNode.getState(), colChoice - 1, player);
-            if (row != -1) {
-                break;
-            }
-            System.err.println("Selected column is full!!!");
-        }
-
-        checkGameOver(player);
-    }
-
-    public Integer move(String[][] state , Integer colChoice , Player player){
+   public Integer move(String[][] state , Integer colChoice , Player player){
 
         if(!state[0][colChoice].equals(" ")){
             return -1;
@@ -166,6 +81,5 @@ public class Connect4 {
         state[i][colChoice] = player.label;
         return i;
     }
-
 
 }

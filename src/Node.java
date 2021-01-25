@@ -183,13 +183,24 @@ public class Node {
 
         Integer playerScore = 0;
         Integer opponentScore = 0;
+        Integer neighBorCounter = 0;
+        Integer maxNeighBor = 0;
 
         for (int i = 0; i <4 ; i++) {
 
             if(this.state[rowIndex][colIndex].equals(player.label)){
                 playerScore++;
+                neighBorCounter++;
+
             }else if(this.state[rowIndex][colIndex].equals(Utils.reversePlayer(player).label)){
                 opponentScore++;
+                maxNeighBor = Math.max(neighBorCounter,maxNeighBor);
+                neighBorCounter = 0;
+
+            }else{
+                maxNeighBor = Math.max(neighBorCounter,maxNeighBor);
+
+                neighBorCounter = 0;
             }
 
             rowIndex+=deltaRow;
@@ -203,7 +214,16 @@ public class Node {
             return  Constant.WIN_SCORE;
         }
         else{
-            return playerScore;
+            if(maxNeighBor ==3){
+               if (opponentScore == 0) return playerScore + 50;
+               else return playerScore + 20;
+            }else if(maxNeighBor == 2){
+                if (opponentScore == 0) return playerScore + 10;
+                else if(opponentScore == 1) return  playerScore + 3;
+                 else return playerScore + 1;
+            }else{
+                return playerScore;
+            }
         }
     }
 
